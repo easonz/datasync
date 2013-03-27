@@ -3,6 +3,7 @@ package org.zhangpan.datasync.foldermonitor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.zhangpan.datasync.foldermonitor.FolderMonitor;
 
 public class FileScanTest {
 

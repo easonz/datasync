@@ -13,20 +13,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 在系统启动的时候扫描本地文件目录与服务器文件目录相比较，得出差异结果。
+ * 在系统启动的时候扫描本地文件目录与上次系统推出的时候的目录相比较，得出差异结果。
  * 是JNotify的补充，防止用户在退出程序的这段时间对本地目录的修改不能同步到服务器上
  * 
  * @author zhangchao
  * 
  */
-public class FolderScan {
+public class FolderChecker {
 
-	private static Logger logger = LoggerFactory.getLogger(FolderScan.class);
+	private static Logger logger = LoggerFactory.getLogger(FolderChecker.class);
 	public static final String INFO_FILENAME = "_dirInfo.xml";
 	private String rootDirUrl = "rootDir";
 	private File rootDir = null;
 
-	public FolderScan() {
+	public FolderChecker() {
 		rootDir = new File(rootDirUrl);
 		if (!rootDir.exists()) {
 			rootDir.mkdir();

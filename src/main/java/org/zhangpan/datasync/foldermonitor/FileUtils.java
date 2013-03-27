@@ -43,7 +43,7 @@ public class FileUtils {
 	public static File[] getFiles(File dir) {
 		return dir.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
-				if (pathname.getName().equals(FolderScan.INFO_FILENAME)) {
+				if (pathname.getName().equals(FolderChecker.INFO_FILENAME)) {
 					return false;
 				}
 				return pathname.isFile();

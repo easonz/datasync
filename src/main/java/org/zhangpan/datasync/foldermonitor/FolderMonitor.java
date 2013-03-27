@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FolderMonitor {
 
-	private static Logger logger = LoggerFactory.getLogger(FolderScan.class);
+	private static Logger logger = LoggerFactory.getLogger(FolderChecker.class);
 	private String rootFolder;
 	private int mask = JNotify.FILE_CREATED | JNotify.FILE_DELETED | JNotify.FILE_MODIFIED | JNotify.FILE_RENAMED;
 	private boolean watchSubtree = true;

@@ -55,11 +55,7 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>jaxen</groupId>
-			<artifactId>jaxen</artifactId>
-			<version>1.1.4</version>
-		</dependency>
+		
 		<!-- LOGGING begin -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -98,22 +94,55 @@
 			<scope>runtime</scope>
 		</dependency>
 		<!-- LOGGING end -->
+		
+		<!-- h2 -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>${h2.version}</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<!-- dom4j -->
 		<dependency>
 			<groupId>org.apache.directory.studio</groupId>
 			<artifactId>org.dom4j.dom4j</artifactId>
 			<version>1.6.1</version>
 		</dependency>
 		<dependency>
+			<groupId>jaxen</groupId>
+			<artifactId>jaxen</artifactId>
+			<version>1.1.4</version>
+		</dependency>
+		
+		<!-- code and decode -->
+		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 			<version>1.7</version>
 		</dependency>
+		
+		<!-- json -->
 		<dependency>
 			<groupId>org.apache.clerezza.ext</groupId>
 			<artifactId>org.json.simple</artifactId>
 			<version>0.3-incubating</version>
 		</dependency>
-
+		
+		<!-- GENERAL UTILS begin -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>${commons-lang3.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${guava.version}</version>
+		</dependency>
+		<!-- GENERAL UTILS end -->
+		
+		<!-- apache http client -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
@@ -130,4 +159,36 @@
 			<version>4.2.3</version>
 		</dependency>
 	</dependencies>
+
+	<profiles>
+		<!-- 刷新开发环境数据库 -->
+		<profile>
+			<id>refresh-db</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<configuration>
+							<target>
+								<!-- 
+								<property file="src/main/resources/application.development.properties" />
+								 -->
+								<property file="src/main/resources/application.properties" />
+								<sql driver="${jdbc.driver}" url="${jdbc.url}" userid="${jdbc.username}" password="${jdbc.password}" onerror="continue" encoding="${project.build.sourceEncoding}">
+									<classpath refid="maven.test.classpath" />
+									<transaction src="src/main/resources/sql/h2/schema.sql" />
+									<!-- 
+									<transaction src="src/test/resources/data/import-data.sql" />
+									 -->
+								</sql>
+								<echo>project.artifactId : ${project.artifactId}</echo>
+								<echo>project.build.directory : ${project.build.directory}</echo>
+							</target>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

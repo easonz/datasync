@@ -1,2 +1,1 @@
-delete from auth_task;
-delete from auth_user;
+delete from sync_task;
