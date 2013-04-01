@@ -1,4 +1,4 @@
-package org.zhangpan.datasync;
+package org.zhangpan.datasync.test;
 
 import java.util.Scanner;
 
@@ -59,7 +59,7 @@ public class MainLogicTest {
 						break;
 					}
 				} catch (DataSyncException e1) {
-					e1.printStackTrace();
+					// e1.printStackTrace();
 				}
 
 			}

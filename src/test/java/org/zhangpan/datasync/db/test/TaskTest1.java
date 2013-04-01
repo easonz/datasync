@@ -1,10 +1,17 @@
-package org.zhangpan.datasync.db;
+package org.zhangpan.datasync.db.test;
 
 import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.zhangpan.datasync.db.DBConnection;
+import org.zhangpan.datasync.db.EventType;
+import org.zhangpan.datasync.db.OptTemplate;
+import org.zhangpan.datasync.db.PageModel;
+import org.zhangpan.datasync.db.Task;
+import org.zhangpan.datasync.db.TaskDAO;
+import org.zhangpan.datasync.db.TaskDAOImpl;
 
 public class TaskTest1 {
 	DBConnection dbConn = null;
@@ -30,7 +37,7 @@ public class TaskTest1 {
 			Task u = new Task();
 			u.setDstPath("/abc");
 			u.setSrcPath("/abc");
-			u.setEventType("add");
+			u.setEventType(EventType.add);
 			boolean b = taskdao.insert(u);
 			if (b == false) {
 				System.out.println("插入失败");
@@ -49,7 +56,7 @@ public class TaskTest1 {
 		Task u = new Task();
 		u.setDstPath("/abc");
 		u.setSrcPath("/abc");
-		u.setEventType("add");
+		u.setEventType(EventType.add);
 		boolean b = taskdao.update(u);
 		if (b == false) {
 			System.out.println("更新失败");

@@ -1,4 +1,4 @@
-package org.zhangpan.datasync.db;
+package org.zhangpan.datasync.db.test;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

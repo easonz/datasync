@@ -16,10 +16,10 @@ public class MainLogic {
 	private SyncLogic syncLogic = null;
 	private AutoSyncThread autoSyncThread = null;
 	private ManualSyncThread manualSyncThread = null;
-	private String rootDir = null;
 	private boolean isAutoSync = false;
 	private int syncInterval = 600;
 	private Lock syncLock = new ReentrantLock();
+	private String rootDir = "d:/test";
 
 	public MainLogic() {
 		folderChecker = new FolderChecker();
@@ -53,16 +53,27 @@ public class MainLogic {
 
 	public void init() {
 
-		logger.info("init");
+		logger.info("data sync program init...");
 		try {
 			// 检测本地文件夹在系统启动时与上次退出时的差异
 			folderChecker.init();
 			// 监控本地文件夹修改
-			FolderMonitor.getInstance().setRootFolder("d:/test");
+			FolderMonitor.getInstance().setRootFolder(rootDir);
 			FolderMonitor.getInstance().startMonitor();
 		} catch (FolderCheckException e) {
 			throw new DataSyncException(e);
 		}
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				try {
+					logger.info("data sync program stop...");
+					FolderMonitor.getInstance().stopMonitor();
+				} catch (FolderCheckException e) {
+					e.printStackTrace();
+				}
+			}
+		});
 
 		if (isAutoSync) {
 			autoSyncThread.start();

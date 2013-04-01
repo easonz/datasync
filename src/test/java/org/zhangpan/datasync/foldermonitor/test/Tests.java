@@ -1,4 +1,4 @@
-package org.zhangpan.datasync.foldermonitor;
+package org.zhangpan.datasync.foldermonitor.test;
 import java.io.IOException;
 
 import net.contentobjects.jnotify.JNotify;

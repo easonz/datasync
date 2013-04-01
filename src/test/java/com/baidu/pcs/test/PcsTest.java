@@ -1,4 +1,4 @@
-package com.baidu.pcstest;
+package com.baidu.pcs.test;
 
 import java.io.File;
 import java.util.List;

@@ -1,13 +1,23 @@
 package org.zhangpan.datasync.db;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
+
+import org.zhangpan.utils.DateFormater;
 
 @SuppressWarnings("unchecked")
 public class TaskDAOImpl implements TaskDAO {
 
 	private OptTemplate optTemplate = null;
 
+	public TaskDAOImpl() {
+		super();
+		this.optTemplate = new OptTemplate();
+	}
 	public TaskDAOImpl(OptTemplate optTemplate) {
 		super();
 		this.optTemplate = optTemplate;
@@ -32,8 +42,11 @@ public class TaskDAOImpl implements TaskDAO {
 	}
 
 	public boolean insert(Task task) {
-		String sql = "insert into sync_task(dst_path, src_path, event_type, event_date) values(?,?,?,?)";
-		Object[] obj = { task.getDstPath(), task.getSrcPath(), task.getEventType(), task.getEventDate() };
+		String sql = "insert into sync_task(dst_path, src_path, event_type, status, file_type, event_date) values(?,?,?,?,?,?)";
+		Object[] obj = { task.getDstPath(), task.getSrcPath(),
+				task.getEventType().toString(), task.getStatus(),
+				task.getFileType(),
+				task.getEventDate() };
 		return optTemplate.update(sql, obj, false);
 	}
 
@@ -95,10 +108,60 @@ public class TaskDAOImpl implements TaskDAO {
 	}
 
 	public boolean update(Task task) {
-		String sql = "update sync_task set dst_path=?, src_path=?, event_type=?, event_date=? where id=?";
+		String sql = "update sync_task set dst_path=?, src_path=?, event_type=?, status=?, file_type=?, event_date=? where id=?";
 		Object[] obj = { task.getDstPath(), task.getSrcPath(),
-				task.getEventType(), task.getEventDate(), task.getId() };
+				task.getEventType().toString(), task.getStatus(),
+				task.getFileType(),
+				task.getEventDate(),
+				task.getId() };
 		return optTemplate.update(sql, obj, false);
+	}
+
+	public Date getLastSyncDate() {
+		String sql = "select * from sync_task where id=0";
+		Object[] obj = {};
+		Task task = (Task) optTemplate.query(sql, obj,
+				new TaskDAOObjectMapper()).get(0);
+		return task.getEventDate();
+	}
+
+	public List<Task> queryAllSyncTask() {
+		String sql = "select * from sync_task where id<>0 and status=0";
+		Object[] obj = {};
+		return (List<Task>) optTemplate.query(sql, obj,
+				new TaskDAOObjectMapper());
+	}
+
+	public List<Task> query(String sql, String[] obj) {
+		return (List<Task>) optTemplate.query(sql, obj,
+				new TaskDAOObjectMapper());
+	}
+
+	public int querySize(String sql, String[] obj) {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		int size = 0;
+		try {
+			conn = DBConnection.getConn();
+			pstmt = conn.prepareStatement(sql);
+			for (int i = 0; i < obj.length; i++) {
+				pstmt.setObject(i + 1, obj[i]);
+			}
+			ResultSet rs = pstmt.executeQuery();
+			rs.next();
+			size = rs.getInt(1);
+
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+		} finally {
+			try {
+				pstmt.close();
+				conn.close();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+		}
+		return size;
 	}
 
 }
@@ -111,8 +174,11 @@ class TaskDAOObjectMapper implements ObjectMapper {
 			u.setId(rs.getLong("id"));
 			u.setDstPath(rs.getString("dst_path"));
 			u.setSrcPath(rs.getString("src_path"));
-			u.setEventType(rs.getString("event_type"));
-			u.setEventDate(rs.getString("event_date"));
+			u.setStatus(rs.getInt("status"));
+			u.setFileType(rs.getInt("file_type"));
+			u.setEventType(EventType.valueOf(rs.getString("event_type")));
+			u.setEventDate(DateFormater.getInstance().getDateAndTime(
+					rs.getString("event_date")));
 
 		} catch (Exception ex) {
 			ex.printStackTrace();

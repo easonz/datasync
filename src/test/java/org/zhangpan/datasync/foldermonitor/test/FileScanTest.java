@@ -1,4 +1,4 @@
-package org.zhangpan.datasync.foldermonitor;
+package org.zhangpan.datasync.foldermonitor.test;
 
 import org.junit.After;
 import org.junit.Before;

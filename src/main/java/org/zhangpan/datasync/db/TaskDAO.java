@@ -1,5 +1,6 @@
 package org.zhangpan.datasync.db;
 
+import java.util.Date;
 import java.util.List;
 
 public interface TaskDAO {
@@ -20,4 +21,11 @@ public interface TaskDAO {
 
 	public PageModel query(int pageNo, int pageSize, String condition); // 分页模糊查询
 
+	public Date getLastSyncDate(); // 获取最后更新的时间
+
+	public List<Task> queryAllSyncTask(); // 全部查询
+
+	public List<Task> query(String sql, String[] obj); // 按条件查询
+
+	public int querySize(String sql, String[] obj); // 按条件查询到得任务条数
 }
