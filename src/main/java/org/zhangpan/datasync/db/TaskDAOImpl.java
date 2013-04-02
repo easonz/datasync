@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import org.zhangpan.utils.Constants;
 import org.zhangpan.utils.DateFormater;
 
 @SuppressWarnings("unchecked")
@@ -43,6 +44,7 @@ public class TaskDAOImpl implements TaskDAO {
 
 	public boolean insert(Task task) {
 		String sql = "insert into sync_task(dst_path, src_path, event_type, status, file_type, event_date) values(?,?,?,?,?,?)";
+		task.setStatus(Constants.UNSYNC);
 		Object[] obj = { task.getDstPath(), task.getSrcPath(),
 				task.getEventType().toString(), task.getStatus(),
 				task.getFileType(),
@@ -126,7 +128,7 @@ public class TaskDAOImpl implements TaskDAO {
 	}
 
 	public List<Task> queryAllSyncTask() {
-		String sql = "select * from sync_task where id<>0 and status=0";
+		String sql = "select * from sync_task where id<>0 and status=" + Constants.UNSYNC;
 		Object[] obj = {};
 		return (List<Task>) optTemplate.query(sql, obj,
 				new TaskDAOObjectMapper());
@@ -176,7 +178,8 @@ class TaskDAOObjectMapper implements ObjectMapper {
 			u.setSrcPath(rs.getString("src_path"));
 			u.setStatus(rs.getInt("status"));
 			u.setFileType(rs.getInt("file_type"));
-			u.setEventType(EventType.valueOf(rs.getString("event_type")));
+			String event_type = rs.getString("event_type");
+			u.setEventType(EventType.valueOf(event_type));
 			u.setEventDate(DateFormater.getInstance().getDateAndTime(
 					rs.getString("event_date")));
 

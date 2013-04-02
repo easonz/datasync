@@ -9,78 +9,83 @@ import com.baidu.pcs.PcsUploadResult;
 import com.baidu.pcs.exception.PcsException;
 
 public class PcsTest {
-	//private static String accessToken = "3.c2d0e04c99d5f0ec11d36cb0e782ec54.2592000.1334322972.1175746697-238347";
-	private static String accessToken = "3.e87dfe1d23d49c016f14158faad519e2.2592000.1360397434.3355604315-238347";
-	//private static String appRoot = "/apps/pcstest_oauth/";
-	private static String appRoot = "/apps/pcstest_oauth/";
+	private static String accessToken = "3.d812bd27085fa39feafa8410aefb6f10.2592000.1367463460.3355604315-502107";
+	private static String appRoot = "/apps/SyncMyData/";
 	private static String localFileName = "README.rst";
 	private static String serverFileName = localFileName + "pcs_serverside";
 
-	public static void main(String[] args) throws PcsException {
+		public static void main(String[] args) throws PcsException {
 		PcsClient pcsClient = new PcsClient(accessToken, appRoot);
 		System.out.println(pcsClient.quota());
 
-		// list
+			// list
 		for (PcsFileEntry entity : pcsClient.list(appRoot)) {
 			if (entity.getServerFilename().indexOf(localFileName) != -1) {
 				// delete
-				pcsClient.delete(entity.getPath() );
+				pcsClient.delete(entity.getPath());
 				System.out.println("[delete]" + entity.getServerFilename());
 			} else {
 				System.out.println(entity.getServerFilename());
 			}
-		}
+			}
 
 		pcsClient.mkdir(appRoot + serverFileName + ".dir2");
 
-		// upload
+			// upload
 		System.out.println("uploading ...");
-		PcsUploadResult rst = pcsClient.uploadFile(localFileName, appRoot, serverFileName);
-		
+		PcsUploadResult rst = pcsClient.uploadFile(localFileName, appRoot,
+				serverFileName);
+
 		System.out.println(rst);
-		
+
 		// check if it's in file list
 		for (PcsFileEntry entity : pcsClient.list(appRoot)) {
 			if (entity.getServerFilename().equals(serverFileName))
 				System.out.println("upload file in file List now!");
 		}
 
-		// download
+			// download
 		System.out.println("downloading ...");
-		pcsClient.downloadToFile(appRoot + serverFileName, localFileName + ".download");
+		pcsClient.downloadToFile(appRoot + serverFileName, localFileName
+				+ ".download");
 
-		// copy
+			// copy
 		System.out.println("copy ...");
-		pcsClient.copy(appRoot + serverFileName, appRoot + serverFileName + ".copy");
+		pcsClient.copy(appRoot + serverFileName, appRoot + serverFileName
+				+ ".copy");
 
-		// move
+			// move
 		System.out.println("move ...");
-		pcsClient.move(appRoot + serverFileName, appRoot + serverFileName + ".move");
-		
-		//search
-		for (PcsFileEntry entity : pcsClient.search(appRoot, serverFileName, true)) {
+		pcsClient.move(appRoot + serverFileName, appRoot + serverFileName
+				+ ".move");
+
+		// search
+		for (PcsFileEntry entity : pcsClient.search(appRoot, serverFileName,
+				true)) {
 			System.out.println("searched list:" + entity.getPath());
 		}
-		assertInList(serverFileName+".copy",  pcsClient.search(appRoot, serverFileName, true));
-		assertInList(serverFileName+".move",  pcsClient.search(appRoot, serverFileName, true));
-		
+		assertInList(serverFileName + ".copy",
+				pcsClient.search(appRoot, serverFileName, true));
+		assertInList(serverFileName + ".move",
+				pcsClient.search(appRoot, serverFileName, true));
+
 		// clean up
 		new File(localFileName + ".download").delete();
-		
-	}
-	
 
-	static void assertInList(String fileName, List<PcsFileEntry> lst){
+		}
+		
+
+	static void assertInList(String fileName, List<PcsFileEntry> lst) {
 		System.out.println("assertInList:" + fileName);
 		boolean found = false;
 		for (PcsFileEntry entity : lst) {
 			if (entity.getServerFilename().indexOf(fileName) != -1) {
 				found = true;
-//				System.out.println("true " + entity.getServerFilename());
+				// System.out.println("true " + entity.getServerFilename());
 			}
 		}
 		if (!found) {
-		    throw new AssertionError();
+			throw new AssertionError();
+			}
 		}
 	}
-}

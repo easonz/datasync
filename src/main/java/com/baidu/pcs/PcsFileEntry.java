@@ -70,7 +70,7 @@ public class PcsFileEntry {
 			PcsFileEntry entry = new PcsFileEntry();
 			entry.path = (String) obj.get("path");
 			entry.serverFilename = basename(entry.path);
-			entry.md5 = (String) obj.get("md5");
+			entry.setMd5((String) obj.get("md5"));
 			entry.fsId = getAsLong(obj, "fs_id");
 			entry.isDir = (getAsLong(obj, "isdir") == 1);
 
@@ -86,7 +86,7 @@ public class PcsFileEntry {
 
 	@Override
 	public String toString() {
-		return "PcsFileEntry [fsId=" + fsId + ", path=" + path + ", serverFilename=" + serverFilename + ", md5=" + md5
+		return "PcsFileEntry [fsId=" + fsId + ", path=" + path + ", serverFilename=" + serverFilename + ", md5=" + getMd5()
 				+ ", size=" + size + ", mtime=" + mtime + ", ctime=" + ctime + ", isDir=" + isDir + "]";
 	}
 
@@ -151,6 +151,14 @@ public class PcsFileEntry {
 
 	public void setCtime(long ctime) {
 		this.ctime = ctime;
+	}
+
+	public void setMd5(String md5) {
+		this.md5 = md5;
+	}
+
+	public String getMd5() {
+		return md5;
 	}
 
 }

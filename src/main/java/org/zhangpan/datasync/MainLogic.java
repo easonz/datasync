@@ -13,6 +13,7 @@ public class MainLogic {
 
 	private static Logger logger = LoggerFactory.getLogger(MainLogic.class);
 	private FolderChecker folderChecker = null;
+	private FolderMonitor folderMonitor = null;
 	private SyncLogic syncLogic = null;
 	private AutoSyncThread autoSyncThread = null;
 	private ManualSyncThread manualSyncThread = null;
@@ -22,7 +23,8 @@ public class MainLogic {
 	private String rootDir = "d:/test";
 
 	public MainLogic() {
-		folderChecker = new FolderChecker();
+		folderChecker = FolderChecker.getInstance();
+		folderMonitor = FolderMonitor.getInstance();
 		syncLogic = new SyncLogic();
 		autoSyncThread = new AutoSyncThread(syncLogic, syncLock);
 	}
@@ -55,11 +57,12 @@ public class MainLogic {
 
 		logger.info("data sync program init...");
 		try {
-			// 检测本地文件夹在系统启动时与上次退出时的差异
-			folderChecker.init();
+			// 检测本地文件夹在系统启动时与上次退出时的差异，重构本地目标文件夹结构
+			folderChecker.setRootFolder(rootDir);
+			folderChecker.check(true);
 			// 监控本地文件夹修改
-			FolderMonitor.getInstance().setRootFolder(rootDir);
-			FolderMonitor.getInstance().startMonitor();
+			folderMonitor.setRootFolder(rootDir);
+			folderMonitor.startMonitor();
 		} catch (FolderCheckException e) {
 			throw new DataSyncException(e);
 		}
@@ -132,7 +135,7 @@ public class MainLogic {
 
 	public void exit() {
 		try {
-			FolderMonitor.getInstance().stopMonitor();
+			folderMonitor.stopMonitor();
 		} catch (FolderCheckException e) {
 			throw new DataSyncException(e);
 		}
