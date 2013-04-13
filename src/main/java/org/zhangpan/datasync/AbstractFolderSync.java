@@ -2,27 +2,26 @@ package org.zhangpan.datasync;
 
 import java.io.File;
 
-import org.zhangpan.datasync.db.TaskDAO;
 import org.zhangpan.datasync.db.TaskDAOImpl;
-import org.zhangpan.utils.CommonConfigs;
+import org.zhangpan.utils.ApplicationConfigs;
 import org.zhangpan.utils.Constants;
 
 import com.baidu.pcs.PcsClient;
 
 public abstract class AbstractFolderSync {
 
-	TaskDAO taskDao = null;
-	protected static String accessToken = "";
-	protected static String appRoot = "";
-	protected static String localRoot = "";
+	protected static TaskDAOImpl taskDao = null;
+	protected static String accessToken = null;
+	protected static String appRoot = null;
+	protected static String localRoot = null;
 	PcsClient pcsClient = null;
 
 	public AbstractFolderSync() {
 		taskDao = new TaskDAOImpl();
+		accessToken = new ApplicationConfigs().getProperty(Constants.ACCESS_TOKEN);
+		localRoot = new ApplicationConfigs().getProperty(Constants.LOCAL_ROOT_DIR);
+		appRoot = new ApplicationConfigs().getProperty(Constants.APP_ROOT_DIR);
 		pcsClient = new PcsClient(accessToken, appRoot);
-		accessToken = new CommonConfigs().getProperty(Constants.ACCESS_TOKEN);
-		localRoot = new CommonConfigs().getProperty(Constants.LOCAL_ROOT_DIR);
-		appRoot = new CommonConfigs().getProperty(Constants.APP_ROOT_DIR);
 	}
 
 	protected boolean checkLocalExists(String serverPath) {

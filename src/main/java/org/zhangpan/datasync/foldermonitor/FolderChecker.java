@@ -1,7 +1,6 @@
 package org.zhangpan.datasync.foldermonitor;
 
-import static org.zhangpan.datasync.TaskOperate.*;
-import static org.zhangpan.datasync.foldermonitor.FileUtils.*;
+import static org.zhangpan.datasync.foldermonitor.FileHelper.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,8 +25,7 @@ import org.zhangpan.utils.Constants;
 public class FolderChecker {
 
 	private static Logger logger = LoggerFactory.getLogger(FolderChecker.class);
-	public static final String INFO_FILENAME = "_dirInfo.xml";
-	private String rootFolder = "rootDir";
+	private String rootFolder = null;
 	private File rootDir = null;
 	private boolean dbOperate = false;
 
@@ -76,7 +74,8 @@ public class FolderChecker {
 
 		int changedSize = 0;
 		File infoFile = new File(currentDir.getAbsolutePath()
-				+ File.separator + INFO_FILENAME);
+ + File.separator
+				+ Constants.INFO_FILENAME);
 		if (!infoFile.exists()) {
 			xmlToFile(getEmptyDoc(), infoFile);
 			infoFile.createNewFile();
@@ -94,7 +93,7 @@ public class FolderChecker {
 		for (File file : files) {
 			if (file.isDirectory()) {
 				buildStructure(file);
-			} else if (file.getName().equals(INFO_FILENAME)) {
+			} else if (FileHelper.isExclude(file.getName())) {
 				continue;
 			}
 			Element element = (Element) doc.selectSingleNode("/nodes/node[@name='" + file.getName() + "']");
@@ -110,6 +109,26 @@ public class FolderChecker {
 		return changedSize;
 	}
 	
+	public void freshFileMd5(String path){
+		File targetFile = new File(path);		
+		String md5 = "error_md5";
+		try {
+			md5 = getMd5(targetFile);
+		} catch (FolderCheckException e1) {
+			e1.printStackTrace();
+		}
+		File infoFile = new File(targetFile.getParent() + File.separator
+				+ Constants.INFO_FILENAME);
+		try {
+			Document doc = fileToXml(infoFile);
+			Element element = (Element) doc.selectSingleNode("/nodes/node[@name='" + targetFile.getName() + "']/md5");
+			element.setText(md5);
+			xmlToFile(doc, infoFile);
+		} catch (FolderCheckException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public String getFileMd5(String path) {
 		String md5 = "";
 		File targetFile = new File(path);
@@ -122,11 +141,14 @@ public class FolderChecker {
 			}
 		}
 
-		File infoFile = new File(targetFile.getParent() + File.separator + INFO_FILENAME);
+		File infoFile = new File(targetFile.getParent() + File.separator
+				+ Constants.INFO_FILENAME);
 		try {
 			Document doc = fileToXml(infoFile);
 			Element element = (Element) doc.selectSingleNode("/nodes/node[@name='" + targetFile.getName() + "']/md5");
-			md5 = element.getText();
+			if (element != null) {
+				md5 = element.getText();
+			}
 		} catch (FolderCheckException e) {
 			e.printStackTrace();
 			return "";
@@ -135,7 +157,7 @@ public class FolderChecker {
 	}
 
 	private String getRelativePath(File file) {
-		return file.getAbsolutePath().substring(rootFolder.length() - 1);
+		return file.getAbsolutePath().substring(rootFolder.length());
 	}
 
 	/**
@@ -159,7 +181,7 @@ public class FolderChecker {
 			if (dbOperate) {
 
 				Task task = new Task();
-				task.setSrcPath(getRelativePath(file));
+				task.setDstPath(getRelativePath(file));
 				task.setEventType(EventType.add);
 
 				if (file.isDirectory()) {
@@ -169,7 +191,7 @@ public class FolderChecker {
 					task.setFileType(Constants.FILE);
 					logger.info("add file node : " + file.getName());
 				}
-				add(task);
+				DbHelper.addTask(task);
 			}
 
 			changedSize++;
@@ -186,10 +208,10 @@ public class FolderChecker {
 					if (dbOperate) {
 
 						Task task = new Task();
-						task.setSrcPath(getRelativePath(file));
+						task.setDstPath(getRelativePath(file));
 						task.setEventType(EventType.modify);
 						task.setFileType(Constants.FILE);
-						add(task);
+						DbHelper.addTask(task);
 
 						logger.info("update file node : " + file.getName());
 					}
@@ -224,10 +246,10 @@ public class FolderChecker {
 					File targetFile = new File(dir.getAbsolutePath()
 							+ File.separatorChar + name);
 					Task task = new Task();
-					task.setSrcPath(getRelativePath(targetFile));
+					task.setDstPath(getRelativePath(targetFile));
 					task.setEventType(EventType.delete);
 					task.setFileType(Constants.FILE);
-					add(task);
+					DbHelper.addTask(task);
 				}
 			}
 		}

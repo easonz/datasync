@@ -6,6 +6,8 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.dom4j.Document;
@@ -15,10 +17,27 @@ import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
+import org.zhangpan.utils.Constants;
 
-public class FileUtils {
+public class FileHelper {
 
 	private static String ENCODE_UTF8 = "utf-8";
+
+	private static Set<String> excludeFiles = new HashSet<String>();
+	static {
+		excludeFiles.add(Constants.INFO_FILENAME);
+		excludeFiles.add(Constants.APP_CONFIG_FILE);
+		excludeFiles.add(Constants.LOCAL_CONFIG_FILE);
+	}
+
+	public static boolean isExclude(String fileName) {
+		for (String name : excludeFiles) {
+			if (fileName.endsWith(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * 设置文件为隐藏文件
@@ -43,7 +62,7 @@ public class FileUtils {
 	public static File[] getFiles(File dir) {
 		return dir.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
-				if (pathname.getName().equals(FolderChecker.INFO_FILENAME)) {
+				if (pathname.getName().equals(Constants.INFO_FILENAME)) {
 					return false;
 				}
 				return pathname.isFile();

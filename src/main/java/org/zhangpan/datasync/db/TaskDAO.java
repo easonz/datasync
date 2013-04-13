@@ -28,4 +28,6 @@ public interface TaskDAO {
 	public List<Task> query(String sql, String[] obj); // 按条件查询
 
 	public int querySize(String sql, String[] obj); // 按条件查询到得任务条数
+
+	public void execSql(String sql, String[] obj);// 执行原始Sql语句
 }

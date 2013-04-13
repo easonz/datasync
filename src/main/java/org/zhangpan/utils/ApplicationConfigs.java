@@ -1,7 +1,11 @@
 package org.zhangpan.utils;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -9,24 +13,25 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CommonConfigs {
+public class ApplicationConfigs {
 
-	private static Logger logger = LoggerFactory.getLogger(CommonConfigs.class);
-	private static String configFilePath = "application.properties";
+	private static Logger logger = LoggerFactory.getLogger(ApplicationConfigs.class);
+	private static String fileName = "application.properties";
+	private static String configFilePath = "";
 	private static Properties properties = null;
 
 
-	public CommonConfigs() {
+	public ApplicationConfigs() {
 
 		if (properties == null) {
 			properties = new Properties();
 			URL configFile = Thread.currentThread().getContextClassLoader()
-					.getResource(configFilePath);
-			logger.info("load properties file : " + configFile);
+					.getResource(fileName);
+			configFilePath = configFile.getPath();
+			logger.info("load properties file : " + configFilePath);
 			InputStream is = null;
 			try {
-				is = Thread.currentThread().getContextClassLoader()
-						.getResourceAsStream(configFilePath);
+				is = new FileInputStream(configFilePath);
 				properties.load(is);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -41,6 +46,30 @@ public class CommonConfigs {
 			}
 		}
 
+	}
+
+	public static void setValue(String key, String value) {
+		OutputStream fos = null;
+		try {
+			fos = new FileOutputStream(configFilePath);
+			properties.setProperty(key, value);
+			// 以适合使用 load 方法加载到 Properties 表中的格式，
+			// 将此 Properties 表中的属性列表（键和元素对）写入输出流
+			properties.store(fos, " no comments");
+			logger.info("store property " + key + " : " + value);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (fos != null) {
+				try {
+					fos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	/**

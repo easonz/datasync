@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.zhangpan.datasync.foldermonitor.FolderCheckException;
 import org.zhangpan.datasync.foldermonitor.FolderChecker;
 import org.zhangpan.datasync.foldermonitor.FolderMonitor;
+import org.zhangpan.utils.ApplicationConfigs;
+import org.zhangpan.utils.Constants;
 
 public class MainLogic {
 
@@ -20,13 +22,16 @@ public class MainLogic {
 	private boolean isAutoSync = false;
 	private int syncInterval = 600;
 	private Lock syncLock = new ReentrantLock();
-	private String rootDir = "d:/test";
+	private ApplicationConfigs configs = null;
+	private String rootDir = null;
 
 	public MainLogic() {
 		folderChecker = FolderChecker.getInstance();
 		folderMonitor = FolderMonitor.getInstance();
 		syncLogic = new SyncLogic();
 		autoSyncThread = new AutoSyncThread(syncLogic, syncLock);
+		configs = new ApplicationConfigs();
+		rootDir = configs.getProperty(Constants.LOCAL_ROOT_DIR);
 	}
 
 	public boolean isAutoSync() {
@@ -55,7 +60,7 @@ public class MainLogic {
 
 	public void init() {
 
-		logger.info("data sync program init...");
+		logger.info("-------------------data sync program init--------------------");
 		try {
 			// 检测本地文件夹在系统启动时与上次退出时的差异，重构本地目标文件夹结构
 			folderChecker.setRootFolder(rootDir);
@@ -67,10 +72,11 @@ public class MainLogic {
 			throw new DataSyncException(e);
 		}
 
+		// 添加java程序退出事件处理函数
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				try {
-					logger.info("data sync program stop...");
+					logger.info("data sync program exit...");
 					FolderMonitor.getInstance().stopMonitor();
 				} catch (FolderCheckException e) {
 					e.printStackTrace();
@@ -109,12 +115,17 @@ public class MainLogic {
 
 	public void stopSync() {
 
-		logger.info("stopSync");
+		if (!syncLock.tryLock()) {
 
-		if (isAutoSync && autoSyncThread.holdsLock(syncLock) || !isAutoSync
-				&& manualSyncThread.holdsLock(syncLock)) {
+			logger.info("上次同步未结束");
 			throw new DataSyncException("上次同步未结束");
 		}
+		syncLock.unlock();
+
+		forceStop();
+
+		logger.info("-------------------data sync program stop--------------------");
+		System.exit(0);
 	}
 
 	public void forceStop() {

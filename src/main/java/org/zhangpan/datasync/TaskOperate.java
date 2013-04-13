@@ -24,10 +24,6 @@ public class TaskOperate {
 		return size > 0;
 	}
 
-	public static boolean add(Task task) {
-		return taskDao.insert(task);
-	}
-
 	public static void clearTaskAdd(Task task) {
 		String sql = "delete from sync_task where src_path=? or dst_path=?";
 		String[] obj = { task.getSrcPath(), task.getSrcPath() };

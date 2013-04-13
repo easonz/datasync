@@ -2,9 +2,13 @@ package org.zhangpan.utils;
 
 public class Constants {
 
-	public static String LOCAL_ROOT_DIR = "localRoot";
-	public static String APP_ROOT_DIR = "appRoot";
-	public static String ACCESS_TOKEN = "accessToken";
+	public static final String LOCAL_ROOT_DIR = "localRoot";
+	public static final String APP_ROOT_DIR = "appRoot";
+	public static final String ACCESS_TOKEN = "accessToken";
+	public static final String LOCAL_CONFIG_FILE = "local.ini";
+	public static final String APP_CONFIG_FILE = "server.ini";
+
+	public static final String INFO_FILENAME = "_dirInfo.xml";
 
 	public static final int FOLDER = 0;
 	public static final int FILE = 1;

@@ -166,6 +166,10 @@ public class TaskDAOImpl implements TaskDAO {
 		return size;
 	}
 
+	public void execSql(String sql, String[] obj) {
+		optTemplate.update(sql, obj, false);
+	}
+
 }
 
 class TaskDAOObjectMapper implements ObjectMapper {

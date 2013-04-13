@@ -1,5 +1,6 @@
 package org.zhangpan.datasync;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -8,8 +9,11 @@ import org.slf4j.LoggerFactory;
 import org.zhangpan.datasync.db.Task;
 import org.zhangpan.datasync.db.TaskDAOImpl;
 import org.zhangpan.utils.Constants;
+import org.zhangpan.utils.DateFormater;
+import org.zhangpan.utils.FileUtils;
 import org.zhangpan.utils.ThreadUtils;
 
+import com.baidu.pcs.PcsFileEntry;
 import com.baidu.pcs.exception.PcsException;
 
 /**
@@ -43,6 +47,7 @@ public class LocalFolderSync extends AbstractFolderSync {
 		lastSyncDate = taskDao.getLastSyncDate();
 		logger.info("last sync date : " + lastSyncDate);
 		syncTasks = taskDao.queryAllSyncTask();
+
 		if (syncTasks.size() == 0) {
 			logger.info("has no sync task...");
 			return false;
@@ -65,9 +70,9 @@ public class LocalFolderSync extends AbstractFolderSync {
 					if (isDir) {
 						pcsClient.mkdir(serverPath);
 					} else {
-						pcsClient.uploadFile(localPath,
+						uploadFile(localPath,
 								getParentDir(serverPath),
-								getFileName(serverPath));
+								getFileName(serverPath), true);
 					}
 					break;
 				case move:
@@ -79,8 +84,8 @@ public class LocalFolderSync extends AbstractFolderSync {
 					pcsClient.delete(serverPath);
 					break;
 				case modify:
-					pcsClient.uploadFile(localPath,
-							getParentDir(serverPath), getFileName(serverPath));
+					uploadFile(localPath, getParentDir(serverPath),
+							getFileName(serverPath), true);
 
 				default:
 					break;
@@ -96,8 +101,49 @@ public class LocalFolderSync extends AbstractFolderSync {
 	}
 
 	public boolean after() {
+
+		// 更新 本地和服务器的最后同步时间配置
+		File localCfg = new File(localRoot + Constants.LOCAL_CONFIG_FILE);
+		File appCfg = new File(localRoot + Constants.APP_CONFIG_FILE);
+		try {
+			StringBuffer sb = new StringBuffer();
+			sb.append("lastSyncTime=").append(
+					DateFormater.getInstance().getDateAndTimeStr(new Date()));
+			FileUtils.writeFile(localCfg, sb.toString());
+			FileUtils.writeFile(appCfg, sb.toString());
+
+			uploadFile(localRoot + Constants.LOCAL_CONFIG_FILE, appRoot,
+					Constants.APP_CONFIG_FILE, true);
+			logger.info("upload app config file success.");
+		} catch (PcsException e) {
+			logger.info("upload app config file fail.");
+		}
 		logger.info("LocalFolderSync after");
 		return false;
+	}
+
+	/**
+	 * 
+	 * @param localPath
+	 * @param remoteDir
+	 * @param remoteName
+	 * @param overwrite 是否覆盖服务端的文件
+	 * @return
+	 * @throws PcsException
+	 */
+	private void uploadFile(String localPath, String remoteDir,
+			String remoteName, boolean overwrite) throws PcsException {
+
+		if (overwrite) {
+			List<PcsFileEntry> files = pcsClient.search(remoteDir, remoteName,
+					false);
+			if (files.size() == 1) {
+				logger.info("delete exits servre file : " + remoteDir + remoteName);
+				pcsClient.delete(remoteDir + remoteName);
+			}
+		}
+
+		pcsClient.uploadFile(localPath, remoteDir, remoteName);
 	}
 
 }

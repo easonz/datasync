@@ -1,10 +1,6 @@
 package org.zhangpan.datasync.foldermonitor;
 
-import static org.zhangpan.datasync.TaskOperate.*;
-
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
 import net.contentobjects.jnotify.JNotifyListener;
 
@@ -14,7 +10,7 @@ import org.zhangpan.datasync.db.EventType;
 import org.zhangpan.datasync.db.Task;
 import org.zhangpan.datasync.db.TaskDAO;
 import org.zhangpan.datasync.db.TaskDAOImpl;
-import org.zhangpan.utils.CommonConfigs;
+import org.zhangpan.utils.ApplicationConfigs;
 import org.zhangpan.utils.Constants;
 
 /**
@@ -28,124 +24,147 @@ public class Listener implements JNotifyListener {
 	TaskDAO taskDao = new TaskDAOImpl();
 	private static String rootDir = null;
 	
-	Set<String> excludeFiles = new HashSet<String>();
-
 	public Listener() {
-		excludeFiles.add(FolderChecker.INFO_FILENAME);
-		rootDir = new CommonConfigs().getProperty(Constants.LOCAL_ROOT_DIR);
-	}
-
-	private boolean isExclude(String fileName) {
-		for (String name : excludeFiles) {
-			if (fileName.endsWith(name)) {
-				return true;
-			}
-		}
-		return false;
+		rootDir = new ApplicationConfigs().getProperty(Constants.LOCAL_ROOT_DIR);
 	}
 
 	private String getRelativePath(String path) {
 		return path.substring(rootDir.length());
 	}
 
-	public void fileRenamed(final int wd, final String rootPath,
-			final String oldName, final String newName) {
-
-		if (isExclude(newName)) {
-			return;
-		}
-
-		String oldPathName = getRelativePath(rootPath + "/" + oldName);
-		String newPathName = getRelativePath(rootPath + "/" + newName);
-
-		Task task = new Task();
-		task.setSrcPath(oldPathName);
-		task.setDstPath(newPathName);
-		if (new File(rootPath + "/" + newPathName).isDirectory()) {
+	private void setFileType(File file, Task task) {
+		if (file.isDirectory()) {
 			task.setFileType(Constants.FOLDER);
 		} else {
 			task.setFileType(Constants.FILE);
 		}
-		task.setEventType(EventType.rename);
-		add(task);
+	}
 
+	public void fileRenamed(final int wd, final String rootPath,
+			final String oldName, final String newName) {
+
+		if (FileHelper.isExclude(newName)) {
+			return;
+		}
+
+		String oldPathName = getRelativePath(rootPath + oldName);
+		String newPathName = getRelativePath(rootPath + newName);
 		logger.info("JNotifyTest.fileRenamed() : wd #" + wd + " path = "
 				+ getRelativePath(rootPath) + ", " + oldName + " -> " + newName);
+		if (DbHelper.hasCreateTask(oldPathName)) {
+			// 源文件在上次一同步后创建，然后被重命名，所以就直接上传重命名后的文件
+			DbHelper.deleteTask(oldPathName, EventType.add);
+			logger.info(oldName + " add task has been deleteed...");
+
+			Task task = new Task();
+			task.setDstPath(newPathName);
+			setFileType(new File(rootPath + newPathName), task);
+			task.setEventType(EventType.add);
+			DbHelper.addTask(task);
+			logger.info(newName + " add task has added to db...");
+			return;
+		}
+
+		Task task = new Task();
+		task.setSrcPath(oldPathName);
+		task.setDstPath(newPathName);
+		setFileType(new File(rootPath + newPathName), task);
+		task.setEventType(EventType.rename);
+		DbHelper.addTask(task);
+		logger.info(oldName + "->" + newName + " rename task add to db...");
 	}
 
 	public void fileModified(final int wd, final String rootPath,
 			final String name) {
 
-		if (isExclude(name)) {
+		// 重新计算文件Md5值
+		FolderChecker.getInstance().freshFileMd5(rootPath + name);
+
+		if (FileHelper.isExclude(name)) {
 			return;
 		}
 
-		if (isAdded(name)) {
-			logger.info(name + " has added to db...");
+		String pathName = getRelativePath(rootPath + name);
+		logger.info("JNotifyTest.fileModified() : wd #" + wd + " path = "
+				+ pathName);
+		if (DbHelper.hasModifiedTask(pathName)) {
+			// 该文件已经有未同步的修改任务，无需再添加
+			logger.info(name + " modify task has been added to db...");
 			return;
 		}
 		
-		String pathName = getRelativePath(rootPath + "/" + name);
 
 		Task task = new Task();
 		task.setDstPath(pathName);
-		if (new File(rootPath + "/" + name).isDirectory()) {
-			task.setFileType(Constants.FOLDER);
-		} else {
-			task.setFileType(Constants.FILE);
-		}
+		setFileType(new File(rootPath + name), task);
 		task.setEventType(EventType.modify);
-		add(task);
+		DbHelper.addTask(task);
+		logger.info(name + " modify task add to db...");
 
-		logger.info("JNotifyTest.fileModified() : wd #" + wd
- + " path = "
-				+ pathName);
 
 	}
 
 	public void fileDeleted(final int wd, final String rootPath,
 			final String name) {
 
-		if (isExclude(name)) {
+		if (FileHelper.isExclude(name)) {
 			return;
 		}
 
-		String pathName = getRelativePath(rootPath + "/" + name);
-
-		Task task = new Task();
-		task.setDstPath(pathName);
-		if (new File(rootPath + "/" + name).isDirectory()) {
-			task.setFileType(Constants.FOLDER);
-		} else {
-			task.setFileType(Constants.FILE);
-		}
-		task.setEventType(EventType.delete);
-		add(task);
-
+		String pathName = getRelativePath(rootPath + name);
 		logger.info("JNotifyTest.fileDeleted() : wd #" + wd + " path = "
 				+ pathName);
+
+		if (DbHelper.hasModifiedTask(pathName)) {
+			// 该文件已经有未同步的修改任务，删除后，再添加任务
+			logger.info(name + " modify task has been delete...");
+			DbHelper.deleteTask(pathName, EventType.modify);
+			logger.info(name + " server with no need to modify...");
+		}
+
+		if (DbHelper.hasCreateTask(pathName)) {
+			// 该文件已经有未同步的创建任务，删除后，再添加任务
+			logger.info(name + " add task has been delete...");
+			DbHelper.deleteTask(pathName, EventType.add);
+			logger.info(name + " server with no need to add...");
+		}
+
+		if (DbHelper.hasRenameTask(pathName)) {
+			// 该文件已经有未同步的重命名任务，删除后，再添加任务
+			logger.info(name + " rename task has been delete...");
+			DbHelper.deleteTask(pathName, EventType.rename);
+			logger.info(name + " server with no need to rename...");
+		}
+
+		// 再添加重命名任务
+		Task task = new Task();
+		task.setDstPath(pathName);
+		setFileType(new File(rootPath + name), task);
+		task.setEventType(EventType.delete);
+		DbHelper.addTask(task);
+
+		logger.info(name + " delete task has added to db...");
+
 	}
 
 	public void fileCreated(final int wd, final String rootPath,
 			final String name) {
 
-		if (isExclude(name)) {
+		if (FileHelper.isExclude(name)) {
 			return;
 		}
 
-		String pathName = getRelativePath(rootPath + "/" + name);
+		String pathName = getRelativePath(rootPath + name);
+		logger.info("JNotifyTest.fileCreated() : wd #" + wd + " path = "
+				+ pathName);
 
 		Task task = new Task();
 		task.setDstPath(pathName);
 		task.setEventType(EventType.add);
-		if (new File(rootPath + "/" + name).isDirectory()) {
-			task.setFileType(Constants.FOLDER);
-		} else {
-			task.setFileType(Constants.FILE);
-		}
-		add(task);
+		setFileType(new File(rootPath + name), task);
+		DbHelper.addTask(task);
 
-		logger.info("JNotifyTest.fileCreated() : wd #" + wd + " path = "
-				+ pathName);
+		logger.info(name + " add task has added to db...");
+
 	}
 }
