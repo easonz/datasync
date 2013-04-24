@@ -71,6 +71,9 @@ public class FolderMonitor {
 					new Listener());
 		} catch (JNotifyException e) {
 			throw new FolderCheckException(e);
+		} catch (Throwable e){
+			e.printStackTrace();
+			logger.info(e.getMessage());
 		}
 	}
 

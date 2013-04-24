@@ -48,7 +48,7 @@ public class ApplicationConfigs {
 
 	}
 
-	public static void setValue(String key, String value) {
+	public void setValue(String key, String value) {
 		OutputStream fos = null;
 		try {
 			fos = new FileOutputStream(configFilePath);

@@ -88,6 +88,15 @@ public class MainLogic {
 			autoSyncThread.start();
 		}
 	}
+	
+	public void tryGetLock(){
+		if (!syncLock.tryLock()) {
+
+			logger.info("上次同步未结束");
+			throw new DataSyncException("上次同步未结束");
+		}
+		syncLock.unlock();
+	}
 
 	public void startSync() {
 		
