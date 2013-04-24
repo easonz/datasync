@@ -3,6 +3,7 @@ package org.zhangpan.utils;
 public class Constants {
 
 	public static final String LOCAL_ROOT_DIR = "localRoot";
+	public static final String SYNC_INTEVAL  = "syncIntever";
 	public static final String APP_ROOT_DIR = "appRoot";
 	public static final String ACCESS_TOKEN = "accessToken";
 	public static final String LOCAL_CONFIG_FILE = "local.ini";

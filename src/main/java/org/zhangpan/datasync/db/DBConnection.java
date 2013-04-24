@@ -1,5 +1,6 @@
 package org.zhangpan.datasync.db;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,7 +18,8 @@ public class DBConnection {
     static {  
         props = new Properties();  
         try {  
-        	InputStream is = DBConnection.class.getClassLoader().getResourceAsStream("db-config.properties");
+        	//InputStream is = DBConnection.class.getClassLoader().getResourceAsStream("db-config.properties");
+        	InputStream is = new FileInputStream("application.properties");
 			props.load(is);
 		} catch (Throwable e) {
 			e.printStackTrace();

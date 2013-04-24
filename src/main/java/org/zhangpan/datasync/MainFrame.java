@@ -201,7 +201,7 @@ public class MainFrame extends JFrame {
 				fd.showDialog(MainFrame.this, "选择本地路径");
 				File f = fd.getSelectedFile();
 				if (f != null) {
-					MainFrame.this.localPathTxt.setText(f.getAbsolutePath() + File.pathSeparator);
+					MainFrame.this.localPathTxt.setText(f.getAbsolutePath() + File.separator);
 					// System.out.println(f.getName());
 				}
 			}

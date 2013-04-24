@@ -32,6 +32,7 @@ public class MainLogic {
 		autoSyncThread = new AutoSyncThread(syncLogic, syncLock);
 		configs = new ApplicationConfigs();
 		rootDir = configs.getProperty(Constants.LOCAL_ROOT_DIR);
+		autoSyncThread.setSyncInterval(configs.getInteger(Constants.SYNC_INTEVAL));
 	}
 
 	public boolean isAutoSync() {

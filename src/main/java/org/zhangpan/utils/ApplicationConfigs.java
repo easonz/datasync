@@ -27,7 +27,8 @@ public class ApplicationConfigs {
 			properties = new Properties();
 			URL configFile = Thread.currentThread().getContextClassLoader()
 					.getResource(fileName);
-			configFilePath = configFile.getPath();
+			//configFilePath = configFile.getPath();
+			configFilePath = fileName;
 			logger.info("load properties file : " + configFilePath);
 			InputStream is = null;
 			try {
@@ -89,7 +90,8 @@ public class ApplicationConfigs {
 	public String getProperty(String key) {
 		String value = getValue(key);
 		if (value == null) {
-			throw new NoSuchElementException();
+			logger.info("has no property : " + key);
+			//throw new NoSuchElementException();
 		}
 		return value;
 	}
